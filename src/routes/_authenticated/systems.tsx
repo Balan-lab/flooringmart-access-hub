@@ -48,7 +48,7 @@ function SystemsPage() {
       { value: "active", label: "Active" }, { value: "needs_review", label: "Needs review" },
       { value: "pending_cancellation", label: "Pending cancellation" }, { value: "cancelled", label: "Cancelled" },
     ] },
-    { name: "decision", label: "Review decision", type: "select", required: true, options: DECISIONS.map((value) => ({ value, label: DECISION_LABEL[value] })) },
+    { name: "decision", label: "Review decision", type: "select", required: true, options: DECISIONS.map((value) => ({ value, label: DECISION_LABEL[value] ?? value })) },
     { name: "consolidation_candidate", label: "Consolidation candidate", type: "switch" },
     { name: "purpose", label: "Business purpose", type: "textarea" },
     { name: "notes", label: "Notes", type: "textarea" },

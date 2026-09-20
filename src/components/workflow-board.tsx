@@ -106,7 +106,7 @@ export function WorkflowBoard({
       required: true,
       options: types.map((t) => ({
         value: t,
-        label: WORKFLOW_LABEL[t],
+        label: WORKFLOW_LABEL[t] ?? t,
       })),
     },
     {
