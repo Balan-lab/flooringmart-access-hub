@@ -1,16 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { DataTable, type Column } from "@/components/data-table";
 import { StatusBadge } from "@/components/status-badge";
-import { ConfirmAction } from "@/components/confirm-button";
 import { RecordDialog, type Field } from "@/components/record-dialog";
 import { formatDate } from "@/lib/format";
 import { useCurrentUser } from "@/lib/auth";
-import { byId, useAccessRecords, useEmployees, useRemove, useSave, type Employee } from "@/lib/data";
+import { byId, useAccessRecords, useEmployees, useSave, type Employee } from "@/lib/data";
 
 export const Route = createFileRoute("/_authenticated/employees")({
   head: () => ({
@@ -34,11 +33,10 @@ export const Route = createFileRoute("/_authenticated/employees")({
 });
 
 function EmployeesPage() {
-  const { canWrite, canDelete } = useCurrentUser();
+  const { canWrite } = useCurrentUser();
   const employees = useEmployees();
   const access = useAccessRecords();
   const save = useSave("employees");
-  const remove = useRemove("employees", ["access_records"]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
 
@@ -122,19 +120,6 @@ function EmployeesPage() {
             >
               Edit
             </Button>
-          ) : null}
-          {canDelete ? (
-            <ConfirmAction
-              trigger={
-                <Button size="icon" variant="ghost">
-                  <Trash2 className="size-4 text-destructive" />
-                </Button>
-              }
-              title={`Delete ${r.full_name}?`}
-              description="This removes the employee and their access records. Prefer marking them as Former to keep the audit trail."
-              confirmLabel="Delete"
-              onConfirm={() => remove.mutate(r.id)}
-            />
           ) : null}
         </div>
       ),

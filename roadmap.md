@@ -1,10 +1,10 @@
 ## Remaining work
-- [ ] Systems & Subscriptions
-- [ ] Access Management
-- [ ] Access Change Log
-- [ ] Onboarding
-- [ ] Offboarding & Role Change
-- [ ] Quarterly Review
-- [ ] Reports
-- [ ] Fix workflow labels
+- [x] Systems & Subscriptions
+- [x] Access Management
+- [x] Access Change Log
+- [x] Onboarding
+- [x] Offboarding & Role Change
+- [x] Quarterly Review
+- [x] Reports
+- [x] Fix workflow labels
 - [ ] Verify routes and runtime

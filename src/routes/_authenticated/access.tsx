@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { ConfirmAction } from "@/components/confirm-button";
 import { DataTable, type Column } from "@/components/data-table";
 import { RecordDialog, type Field } from "@/components/record-dialog";
 import { LevelBadge, StatusBadge } from "@/components/status-badge";
@@ -10,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCurrentUser } from "@/lib/auth";
-import { byId, useAccessRecords, useEmployees, useRemove, useSave, useSystems, type AccessRecord } from "@/lib/data";
+import { byId, useAccessRecords, useEmployees, useSave, useSystems, type AccessRecord } from "@/lib/data";
 import { ACCESS_LEVELS, formatDate } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/access")({
@@ -24,9 +23,9 @@ export const Route = createFileRoute("/_authenticated/access")({
 });
 
 function AccessPage() {
-  const { canWrite, canDelete } = useCurrentUser();
+  const { canWrite, user } = useCurrentUser();
   const employees = useEmployees(); const systems = useSystems(); const access = useAccessRecords();
-  const save = useSave("access_records", ["access_change_log"]); const remove = useRemove("access_records");
+  const save = useSave("access_records", ["access_change_log"]); const saveLog = useSave("access_change_log");
   const employeeMap = byId(employees.data); const systemMap = byId(systems.data);
   const [editing, setEditing] = useState<AccessRecord | null>(null); const [open, setOpen] = useState(false);
   const active = useMemo(() => (access.data ?? []).filter((a) => a.status === "active"), [access.data]);
@@ -50,7 +49,7 @@ function AccessPage() {
     { key: "mfa", header: "MFA", sortValue: (r) => r.mfa_enabled ? 1 : 0, cell: (r) => <Badge variant="outline" className={r.mfa_enabled ? "border-success/30 text-success" : "border-warning/40 text-warning-foreground"}>{r.mfa_enabled ? "Enabled" : "Not recorded"}</Badge> },
     { key: "review", header: "Last review", sortValue: (r) => r.last_review_date ?? "", cell: (r) => formatDate(r.last_review_date) },
     { key: "status", header: "Status", sortValue: (r) => r.status, cell: (r) => <StatusBadge value={r.status} /> },
-    { key: "actions", header: "", className: "text-right", cell: (r) => <div className="flex justify-end gap-1">{canWrite ? <Button size="sm" variant="outline" onClick={() => { setEditing(r); setOpen(true); }}>Edit</Button> : null}{canDelete ? <ConfirmAction trigger={<Button size="icon" variant="ghost"><Trash2 className="size-4 text-destructive" /></Button>} title="Delete access record?" description="This removes the current record. Prefer setting status to Removed so the access history remains auditable." confirmLabel="Delete" onConfirm={() => remove.mutate(r.id)} /> : null}</div> },
+    { key: "actions", header: "", className: "text-right", cell: (r) => canWrite ? <Button size="sm" variant="outline" onClick={() => { setEditing(r); setOpen(true); }}>Edit</Button> : null },
   ];
   return <AppShell title="Access Management" description="Who can access each system, at what level, and when it was last reviewed." actions={canWrite ? <Button onClick={() => { setEditing(null); setOpen(true); }}><Plus className="mr-2 size-4" /> Add access</Button> : null}>
     <Tabs defaultValue="records"><TabsList className="mb-4"><TabsTrigger value="records">Access records</TabsTrigger><TabsTrigger value="employee">By employee</TabsTrigger><TabsTrigger value="system">By system</TabsTrigger><TabsTrigger value="matrix">Matrix</TabsTrigger></TabsList>
@@ -59,6 +58,25 @@ function AccessPage() {
       <TabsContent value="system"><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{(systems.data ?? []).map((s) => { const rows = active.filter((a) => a.system_id === s.id); return <section key={s.id} className="rounded-md border bg-card p-4 shadow-panel"><div className="mb-3 flex items-center justify-between"><h2 className="font-display font-semibold">{s.name}</h2><Badge variant="outline">{rows.length}</Badge></div><div className="space-y-2">{rows.map((a) => <div key={a.id} className="flex items-center justify-between gap-2 text-sm"><span className="truncate">{employeeMap.get(a.employee_id)?.full_name ?? "Unknown"}</span><LevelBadge value={a.access_level} /></div>)}</div></section>; })}</div></TabsContent>
       <TabsContent value="matrix"><div className="overflow-x-auto rounded-md border bg-card shadow-panel"><table className="w-full text-sm"><thead><tr className="bg-muted/60"><th className="sticky left-0 bg-muted px-3 py-2 text-left">Employee</th>{(systems.data ?? []).map((s) => <th key={s.id} className="min-w-28 px-2 py-2 text-left font-medium">{s.name}</th>)}</tr></thead><tbody>{(employees.data ?? []).map((e) => <tr key={e.id} className="border-t"><th className="sticky left-0 bg-card px-3 py-2 text-left font-medium">{e.full_name}</th>{(systems.data ?? []).map((s) => { const found = active.find((a) => a.employee_id === e.id && a.system_id === s.id); return <td key={s.id} className="px-2 py-2">{found ? <LevelBadge value={found.access_level} /> : <span className="text-muted-foreground">—</span>}</td>; })}</tr>)}</tbody></table></div></TabsContent>
     </Tabs>
-    <RecordDialog open={open} onOpenChange={setOpen} title={editing ? "Edit access record" : "Add access record"} description="Store a vault reference only—never credentials, keys, MFA secrets or recovery codes." fields={fields} initial={editing ?? { status: "active", access_level: "Standard", mfa_enabled: false }} saving={save.isPending} onSubmit={(values) => save.mutate({ id: editing?.id, values }, { onSuccess: () => setOpen(false) })} />
+    <RecordDialog open={open} onOpenChange={setOpen} title={editing ? "Edit access record" : "Add access record"} description="Store a vault reference only—never credentials, keys, MFA secrets or recovery codes." fields={fields} initial={editing ?? { status: "active", access_level: "Standard", mfa_enabled: false }} saving={save.isPending} onSubmit={(values) => {
+      const oldLevel = editing?.access_level ?? null;
+      const nextLevel = String(values.access_level ?? "Standard");
+      const nextStatus = String(values.status ?? "active");
+      const rank = ACCESS_LEVELS.indexOf(nextLevel as (typeof ACCESS_LEVELS)[number]);
+      const oldRank = oldLevel ? ACCESS_LEVELS.indexOf(oldLevel) : -1;
+      const action = !editing ? "GRANT" : nextStatus === "removed" ? "REMOVE" : nextStatus === "suspended" ? "SUSPEND" : rank > oldRank ? "ELEVATE" : "MODIFY";
+      save.mutate({ id: editing?.id, values }, { onSuccess: () => {
+        saveLog.mutate({ values: {
+          employee_id: values.employee_id,
+          system_id: values.system_id,
+          action,
+          old_access: oldLevel,
+          new_access: nextStatus === "active" ? nextLevel : nextStatus,
+          completed_by: user?.fullName ?? null,
+          reason: editing ? "Access record updated" : "Access granted",
+        } });
+        setOpen(false);
+      } });
+    }} />
   </AppShell>;
 }
