@@ -92,7 +92,7 @@ export function WorkflowBoard({
       required: true,
       options: types.map((t) => ({
         value: t,
-        label: t === "role_change" ? "Role change" : t[0].toUpperCase() + t.slice(1),
+        label: t === "role_change" ? "Role change" : t === "onboarding" ? "Onboarding" : "Offboarding",
       })),
     },
     {

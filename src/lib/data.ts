@@ -107,7 +107,7 @@ type TableName =
 export function useSave(table: TableName, invalidate: string[] = []) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, values }: { id?: string; values: Record<string, unknown> }) => {
+    mutationFn: async ({ id, values }: { id?: string | undefined; values: Record<string, unknown> }) => {
       const query = id
         ? supabase.from(table).update(values as never).eq("id", id)
         : supabase.from(table).insert(values as never);
