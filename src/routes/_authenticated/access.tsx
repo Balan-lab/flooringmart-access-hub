@@ -60,15 +60,15 @@ function AccessPage() {
     </Tabs>
     <RecordDialog open={open} onOpenChange={setOpen} title={editing ? "Edit access record" : "Add access record"} description="Store a vault reference only—never credentials, keys, MFA secrets or recovery codes." fields={fields} initial={editing ?? { status: "active", access_level: "Standard", mfa_enabled: false }} saving={save.isPending} onSubmit={(values) => {
       const oldLevel = editing?.access_level ?? null;
-      const nextLevel = String(values.access_level ?? "Standard");
-      const nextStatus = String(values.status ?? "active");
+      const nextLevel = String(values["access_level"] ?? "Standard");
+      const nextStatus = String(values["status"] ?? "active");
       const rank = ACCESS_LEVELS.indexOf(nextLevel as (typeof ACCESS_LEVELS)[number]);
       const oldRank = oldLevel ? ACCESS_LEVELS.indexOf(oldLevel) : -1;
       const action = !editing ? "GRANT" : nextStatus === "removed" ? "REMOVE" : nextStatus === "suspended" ? "SUSPEND" : rank > oldRank ? "ELEVATE" : "MODIFY";
       save.mutate({ id: editing?.id, values }, { onSuccess: () => {
         saveLog.mutate({ values: {
-          employee_id: values.employee_id,
-          system_id: values.system_id,
+          employee_id: values["employee_id"],
+          system_id: values["system_id"],
           action,
           old_access: oldLevel,
           new_access: nextStatus === "active" ? nextLevel : nextStatus,
