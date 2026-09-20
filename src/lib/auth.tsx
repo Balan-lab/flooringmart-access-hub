@@ -44,9 +44,10 @@ export function useCurrentUser() {
     queryKey: ["me", userId],
     enabled: !!userId,
     queryFn: async () => {
+      if (!userId) throw new Error("No signed-in user");
       const [{ data: prof }, { data: roles }] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", userId!).maybeSingle(),
-        supabase.from("user_roles").select("role").eq("user_id", userId!),
+        supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
+        supabase.from("user_roles").select("role").eq("user_id", userId),
       ]);
       const roleList = (roles ?? []).map((r) => r.role as AppRole);
       const role: AppRole =
@@ -54,7 +55,7 @@ export function useCurrentUser() {
           roleList.includes(r),
         ) ?? "viewer";
       return {
-        id: userId!,
+        id: userId,
         email: session?.user.email ?? prof?.email ?? "",
         fullName: prof?.full_name ?? session?.user.email ?? "",
         role,

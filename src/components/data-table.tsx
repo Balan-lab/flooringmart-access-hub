@@ -59,9 +59,10 @@ export function DataTable<T>({
     }
     const col = columns.find((c) => c.key === sortKey);
     if (col?.sortValue) {
+      const getSortValue = col.sortValue;
       out = [...out].sort((a, b) => {
-        const av = col.sortValue!(a);
-        const bv = col.sortValue!(b);
+        const av = getSortValue(a);
+        const bv = getSortValue(b);
         if (av === bv) return 0;
         return (av > bv ? 1 : -1) * (sortAsc ? 1 : -1);
       });
