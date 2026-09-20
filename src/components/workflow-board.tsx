@@ -35,9 +35,17 @@ const DEFAULT_TASKS: Record<string, string[]> = {
   ],
   offboarding: [
     "Confirm last working day with manager",
-    "Suspend company email account",
-    "Remove access from every system",
-    "Transfer file & document ownership",
+    "Suspend company email / SSO account",
+    "Remove Magento access",
+    "Remove GitHub and DigitalOcean access",
+    "Remove Figma access",
+    "Remove ChatGPT, Claude and Cursor access",
+    "Remove QuickBooks and Floorzap access",
+    "Remove Namecheap, GoDaddy and domain access",
+    "Remove password manager access",
+    "Rotate or revoke assigned API keys and tokens",
+    "Transfer shared drives, files and document ownership",
+    "Review every registered system for remaining access",
     "Collect equipment",
     "Second person verifies all access removed",
   ],
@@ -48,6 +56,12 @@ const DEFAULT_TASKS: Record<string, string[]> = {
     "Grant new access required by the role",
     "Manager verifies final access list",
   ],
+};
+
+const WORKFLOW_LABEL: Record<string, string> = {
+  onboarding: "Onboarding",
+  offboarding: "Offboarding",
+  role_change: "Role change",
 };
 
 export function WorkflowBoard({
@@ -92,7 +106,7 @@ export function WorkflowBoard({
       required: true,
       options: types.map((t) => ({
         value: t,
-        label: t === "role_change" ? "Role change" : t === "onboarding" ? "Onboarding" : "Offboarding",
+        label: WORKFLOW_LABEL[t],
       })),
     },
     {
@@ -161,6 +175,9 @@ export function WorkflowBoard({
                     </CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {WORKFLOW_LABEL[w.type]}
+                    </span>
                     <StatusBadge value={w.status} />
                     {canWrite ? (
                       <Button
