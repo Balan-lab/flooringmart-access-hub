@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import {
   BarChart3,
+  BookOpen,
   ClipboardCheck,
   CreditCard,
   History,
@@ -33,6 +34,7 @@ const NAV = [
   { to: "/offboarding", label: "Offboarding / Role Change", icon: UserMinus },
   { to: "/reviews", label: "Quarterly Review", icon: ClipboardCheck },
   { to: "/reports", label: "Reports", icon: BarChart3 },
+  { to: "/help", label: "Help Guide", icon: BookOpen },
 ] as const;
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {

@@ -16,6 +16,7 @@ import { Route as AuthenticatedAccessRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedAccessLogRouteImport } from './routes/_authenticated/access-log'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedEmployeesRouteImport } from './routes/_authenticated/employees'
+import { Route as AuthenticatedHelpRouteImport } from './routes/_authenticated/help'
 import { Route as AuthenticatedOffboardingRouteImport } from './routes/_authenticated/offboarding'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
@@ -56,6 +57,11 @@ const AuthenticatedEmployeesRoute = AuthenticatedEmployeesRouteImport.update({
   path: '/employees',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedHelpRoute = AuthenticatedHelpRouteImport.update({
+  id: '/help',
+  path: '/help',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOffboardingRoute =
   AuthenticatedOffboardingRouteImport.update({
     id: '/offboarding',
@@ -90,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/access-log': typeof AuthenticatedAccessLogRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/employees': typeof AuthenticatedEmployeesRoute
+  '/help': typeof AuthenticatedHelpRoute
   '/offboarding': typeof AuthenticatedOffboardingRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/reports': typeof AuthenticatedReportsRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/access-log': typeof AuthenticatedAccessLogRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/employees': typeof AuthenticatedEmployeesRoute
+  '/help': typeof AuthenticatedHelpRoute
   '/offboarding': typeof AuthenticatedOffboardingRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/reports': typeof AuthenticatedReportsRoute
@@ -118,6 +126,7 @@ export interface FileRoutesById {
   '/_authenticated/access-log': typeof AuthenticatedAccessLogRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/employees': typeof AuthenticatedEmployeesRoute
+  '/_authenticated/help': typeof AuthenticatedHelpRoute
   '/_authenticated/offboarding': typeof AuthenticatedOffboardingRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/access-log'
     | '/dashboard'
     | '/employees'
+    | '/help'
     | '/offboarding'
     | '/onboarding'
     | '/reports'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/access-log'
     | '/dashboard'
     | '/employees'
+    | '/help'
     | '/offboarding'
     | '/onboarding'
     | '/reports'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/_authenticated/access-log'
     | '/_authenticated/dashboard'
     | '/_authenticated/employees'
+    | '/_authenticated/help'
     | '/_authenticated/offboarding'
     | '/_authenticated/onboarding'
     | '/_authenticated/reports'
@@ -224,6 +236,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEmployeesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/help': {
+      id: '/_authenticated/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof AuthenticatedHelpRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/offboarding': {
       id: '/_authenticated/offboarding'
       path: '/offboarding'
@@ -267,6 +286,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccessLogRoute: typeof AuthenticatedAccessLogRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEmployeesRoute: typeof AuthenticatedEmployeesRoute
+  AuthenticatedHelpRoute: typeof AuthenticatedHelpRoute
   AuthenticatedOffboardingRoute: typeof AuthenticatedOffboardingRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
@@ -279,6 +299,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccessLogRoute: AuthenticatedAccessLogRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEmployeesRoute: AuthenticatedEmployeesRoute,
+  AuthenticatedHelpRoute: AuthenticatedHelpRoute,
   AuthenticatedOffboardingRoute: AuthenticatedOffboardingRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
