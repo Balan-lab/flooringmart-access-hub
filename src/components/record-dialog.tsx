@@ -41,6 +41,9 @@ type Props = {
   initial?: Record<string, unknown>;
   saving?: boolean;
   onSubmit: (values: Record<string, unknown>) => void;
+
+  // Optional draft persistence
+  draftKey?: string;
 };
 
 export function RecordDialog({
@@ -52,52 +55,126 @@ export function RecordDialog({
   initial,
   saving,
   onSubmit,
+  draftKey,
 }: Props) {
   const [values, setValues] = useState<Record<string, unknown>>({});
 
   useEffect(() => {
     if (!open) return;
+
+    // Restore an existing draft when this dialog supports draft persistence.
+    if (draftKey && !initial?.id) {
+      try {
+        const saved = sessionStorage.getItem(draftKey);
+
+        if (saved) {
+          const parsed = JSON.parse(saved) as Record<string, unknown>;
+
+          const restored: Record<string, unknown> = {};
+
+          for (const f of fields) {
+            const v = parsed[f.name];
+            restored[f.name] =
+              f.type === "switch" ? !!v : (v ?? "");
+          }
+
+          setValues(restored);
+          return;
+        }
+      } catch {
+        // Ignore malformed sessionStorage data.
+        sessionStorage.removeItem(draftKey);
+      }
+    }
+
     const next: Record<string, unknown> = {};
+
     for (const f of fields) {
       const v = initial?.[f.name];
       next[f.name] = f.type === "switch" ? !!v : (v ?? "");
     }
-    setValues(next);
-  }, [open, initial, fields]);
 
-  const set = (name: string, v: unknown) => setValues((p) => ({ ...p, [name]: v }));
+    setValues(next);
+  }, [open, initial, fields, draftKey]);
+
+  // Persist the current draft whenever the user changes a field.
+  useEffect(() => {
+    if (!open || !draftKey || initial?.id) return;
+
+    try {
+      sessionStorage.setItem(draftKey, JSON.stringify(values));
+    } catch {
+      // Ignore storage errors.
+    }
+  }, [values, open, draftKey, initial?.id]);
+
+  const set = (name: string, v: unknown) => {
+    setValues((p) => ({ ...p, [name]: v }));
+  };
+
+  const clearDraft = () => {
+    if (!draftKey) return;
+
+    try {
+      sessionStorage.removeItem(draftKey);
+    } catch {
+      // Ignore storage errors.
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[88vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          {description ? <DialogDescription>{description}</DialogDescription> : null}
+          {description ? (
+            <DialogDescription>{description}</DialogDescription>
+          ) : null}
         </DialogHeader>
+
         <form
           className="grid gap-4 sm:grid-cols-2"
           onSubmit={(e) => {
             e.preventDefault();
+
             const cleaned: Record<string, unknown> = {};
+
             for (const f of fields) {
               const v = values[f.name];
-              if (f.type === "switch") cleaned[f.name] = !!v;
-              else if (v === "" || v === undefined) cleaned[f.name] = null;
-              else if (f.type === "number") cleaned[f.name] = Number(v);
-              else cleaned[f.name] = v;
+
+              if (f.type === "switch") {
+                cleaned[f.name] = !!v;
+              } else if (v === "" || v === undefined) {
+                cleaned[f.name] = null;
+              } else if (f.type === "number") {
+                cleaned[f.name] = Number(v);
+              } else {
+                cleaned[f.name] = v;
+              }
             }
+
             onSubmit(cleaned);
+
+            // Do not clear the draft here.
+            // The parent clears it only after a successful database save.
           }}
         >
           {fields.map((f) => (
             <div
               key={f.name}
-              className={f.full || f.type === "textarea" ? "sm:col-span-2 space-y-2" : "space-y-2"}
+              className={
+                f.full || f.type === "textarea"
+                  ? "sm:col-span-2 space-y-2"
+                  : "space-y-2"
+              }
             >
               <Label htmlFor={f.name}>
                 {f.label}
-                {f.required ? <span className="text-destructive"> *</span> : null}
+                {f.required ? (
+                  <span className="text-destructive"> *</span>
+                ) : null}
               </Label>
+
               {f.type === "textarea" ? (
                 <Textarea
                   id={f.name}
@@ -108,13 +185,19 @@ export function RecordDialog({
               ) : f.type === "select" ? (
                 <Select
                   value={String(values[f.name] ?? "")}
-                  onValueChange={(v) => set(f.name, v === "__none" ? "" : v)}
+                  onValueChange={(v) =>
+                    set(f.name, v === "__none" ? "" : v)
+                  }
                 >
                   <SelectTrigger id={f.name}>
                     <SelectValue placeholder="Select…" />
                   </SelectTrigger>
+
                   <SelectContent>
-                    {!f.required ? <SelectItem value="__none">— None —</SelectItem> : null}
+                    {!f.required ? (
+                      <SelectItem value="__none">— None —</SelectItem>
+                    ) : null}
+
                     {(f.options ?? []).map((o) => (
                       <SelectItem key={o.value} value={o.value}>
                         {o.label}
@@ -129,6 +212,7 @@ export function RecordDialog({
                     checked={!!values[f.name]}
                     onCheckedChange={(v) => set(f.name, v)}
                   />
+
                   <span className="text-sm text-muted-foreground">
                     {values[f.name] ? "Yes" : "No"}
                   </span>
@@ -143,13 +227,24 @@ export function RecordDialog({
                   onChange={(e) => set(f.name, e.target.value)}
                 />
               )}
-              {f.help ? <p className="text-xs text-muted-foreground">{f.help}</p> : null}
+
+              {f.help ? (
+                <p className="text-xs text-muted-foreground">
+                  {f.help}
+                </p>
+              ) : null}
             </div>
           ))}
+
           <DialogFooter className="sm:col-span-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
               Cancel
             </Button>
+
             <Button type="submit" disabled={saving}>
               {saving ? "Saving…" : "Save"}
             </Button>
