@@ -8,3 +8,7 @@
 - [x] Reports
 - [x] Fix workflow labels
 - [x] Verify routes and runtime
+- [ ] Add secure admin-created employee login accounts
+- [ ] Add confirmed admin password resets and audit events
+- [ ] Remove employee self-service account creation
+- [ ] Verify role authorization, one-time password handling, and existing sign-in

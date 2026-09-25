@@ -163,6 +163,7 @@ export type Database = {
       }
       employees: {
         Row: {
+          auth_user_id: string | null
           created_at: string
           created_by: string | null
           department: string | null
@@ -180,6 +181,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          auth_user_id?: string | null
           created_at?: string
           created_by?: string | null
           department?: string | null
@@ -197,6 +199,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          auth_user_id?: string | null
           created_at?: string
           created_by?: string | null
           department?: string | null
@@ -626,7 +629,13 @@ export type Database = {
         | "Owner"
       access_status: "active" | "suspended" | "removed"
       app_role: "super_admin" | "it_admin" | "manager" | "viewer"
-      change_action: "GRANT" | "MODIFY" | "ELEVATE" | "SUSPEND" | "REMOVE"
+      change_action:
+        | "GRANT"
+        | "MODIFY"
+        | "ELEVATE"
+        | "SUSPEND"
+        | "REMOVE"
+        | "PASSWORD_RESET"
       employee_status: "active" | "on_leave" | "former"
       review_decision:
         | "KEEP"
@@ -779,7 +788,14 @@ export const Constants = {
       ],
       access_status: ["active", "suspended", "removed"],
       app_role: ["super_admin", "it_admin", "manager", "viewer"],
-      change_action: ["GRANT", "MODIFY", "ELEVATE", "SUSPEND", "REMOVE"],
+      change_action: [
+        "GRANT",
+        "MODIFY",
+        "ELEVATE",
+        "SUSPEND",
+        "REMOVE",
+        "PASSWORD_RESET",
+      ],
       employee_status: ["active", "on_leave", "former"],
       review_decision: [
         "KEEP",
