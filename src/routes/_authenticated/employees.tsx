@@ -212,7 +212,7 @@ function EmployeesPage() {
         open={open}
         onOpenChange={setOpen}
         title={editing ? `Edit ${editing.full_name}` : "Add employee and login"}
-        description={editing ? undefined : "An account password will be generated and shown once after creation."}
+        {...(!editing ? { description: "An account password will be generated and shown once after creation." } : {})}
         fields={fields}
         initial={editing ?? { status: "active" }}
         saving={save.isPending || accountBusy}
