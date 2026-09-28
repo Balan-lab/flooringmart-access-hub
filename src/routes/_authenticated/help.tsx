@@ -43,8 +43,8 @@ const sections = [
     icon: UserRoundCog,
     summary: "Access the app and understand what each role can do.",
     items: [
-      "Sign in with your confirmed FlooringMart work email and password.",
-      "If you created a new account, open the confirmation email before signing in.",
+      "Sign in with the FlooringMart work email and password supplied by your administrator.",
+      "Only Super Admin and IT / Admin can create employee logins or reset passwords. New passwords are shown once; share them securely.",
       "Super Admin has full administration, including role management and permitted deletions.",
       "IT / Admin can create and edit operational records, workflows, reviews and logs.",
       "Manager and Viewer accounts have read-only access. Grant elevated roles only when needed.",
