@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -35,7 +34,6 @@ function AuthPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -54,26 +52,6 @@ function AuthPage() {
       return;
     }
     navigate({ to: "/dashboard", replace: true });
-  }
-
-  async function signUp(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: window.location.origin,
-        data: { full_name: fullName || email },
-      },
-    });
-    setBusy(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    if (data.session) navigate({ to: "/dashboard", replace: true });
-    else toast.success("Check your email to confirm your account.");
   }
 
   return (
@@ -107,13 +85,7 @@ function AuthPage() {
             <CardDescription>Sign in with your FlooringMart work email.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="signin">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Sign in</TabsTrigger>
-                <TabsTrigger value="signup">Create account</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="signin">
+            <div>
                 <form onSubmit={signIn} className="space-y-4 pt-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Work email</Label>
@@ -139,49 +111,8 @@ function AuthPage() {
                     {busy ? "Signing in…" : "Sign in"}
                   </Button>
                 </form>
-              </TabsContent>
-
-              <TabsContent value="signup">
-                <form onSubmit={signUp} className="space-y-4 pt-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Full name</Label>
-                    <Input
-                      id="name"
-                      required
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email2">Work email</Label>
-                    <Input
-                      id="email2"
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password2">Password</Label>
-                    <Input
-                      id="password2"
-                      type="password"
-                      required
-                      minLength={8}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={busy}>
-                    {busy ? "Creating…" : "Create account"}
-                  </Button>
-                  <p className="text-xs text-muted-foreground">
-                    New accounts start as Viewer. A Super Admin can raise your role.
-                  </p>
-                </form>
-              </TabsContent>
-            </Tabs>
+              <p className="pt-4 text-xs text-muted-foreground">Need an account or a password reset? Contact your administrator.</p>
+            </div>
           </CardContent>
         </Card>
       </div>
