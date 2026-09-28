@@ -1,7 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
 
 const employeeInput = z.object({
   employee_code: z.string().trim().min(1).max(80),
@@ -47,16 +49,7 @@ export function generateEmployeePassword(): string {
 
 async function assertAccountAdmin(context: {
   userId: string;
-  supabase: {
-    from: (table: "user_roles") => {
-      select: (columns: "role") => {
-        eq: (column: "user_id", id: string) => PromiseLike<{
-          data: { role: string }[] | null;
-          error: { message: string } | null;
-        }>;
-      };
-    };
-  };
+  supabase: SupabaseClient<Database>;
 }) {
   const { data, error } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
   if (error || !data?.some(({ role }) => role === "super_admin" || role === "it_admin")) {
@@ -138,7 +131,7 @@ export const resetEmployeePassword = createServerFn({ method: "POST" })
     const { error: resetError } = await supabaseAdmin.auth.admin.updateUserById(userId, { password });
     if (resetError) throw new Error("Could not reset the employee password.");
 
-    const { error: auditError } = await context.supabase.from("access_change_log").insert({
+    const { error: auditError } = await supabaseAdmin.from("access_change_log").insert({
       employee_id: employee.id,
       action: "PASSWORD_RESET",
       completed_by: context.claims.email ?? context.userId,
