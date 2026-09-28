@@ -1,15 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Check, Copy, KeyRound, Plus } from "lucide-react";
+import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
+import { ConfirmAction } from "@/components/confirm-button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DataTable, type Column } from "@/components/data-table";
 import { StatusBadge } from "@/components/status-badge";
 import { RecordDialog, type Field } from "@/components/record-dialog";
 import { formatDate } from "@/lib/format";
 import { useCurrentUser } from "@/lib/auth";
 import { byId, useAccessRecords, useEmployees, useSave, type Employee } from "@/lib/data";
+import { createEmployeeAccount, resetEmployeePassword } from "@/lib/employee-accounts.functions";
 
 export const Route = createFileRoute("/_authenticated/employees")({
   head: () => ({
@@ -34,11 +40,50 @@ export const Route = createFileRoute("/_authenticated/employees")({
 
 function EmployeesPage() {
   const { canWrite } = useCurrentUser();
+  const createAccount = useServerFn(createEmployeeAccount);
+  const resetPassword = useServerFn(resetEmployeePassword);
+  const queryClient = useQueryClient();
   const employees = useEmployees();
   const access = useAccessRecords();
   const save = useSave("employees");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
+  const [accountBusy, setAccountBusy] = useState(false);
+  const [credential, setCredential] = useState<{ password: string; email: string; fullName: string } | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  async function createEmployee(values: Record<string, unknown>) {
+    setAccountBusy(true);
+    try {
+      const result = await createAccount({ data: values as Parameters<typeof createAccount>[0]["data"] });
+      await queryClient.invalidateQueries({ queryKey: ["employees"] });
+      setOpen(false);
+      setCopied(false);
+      setCredential(result);
+      toast.success("Employee login created");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not create employee login.");
+    } finally {
+      setAccountBusy(false);
+    }
+  }
+
+  async function resetFor(employee: Employee) {
+    setAccountBusy(true);
+    try {
+      const result = await resetPassword({ data: { employeeId: employee.id } });
+      await queryClient.invalidateQueries({ queryKey: ["employees"] });
+      await queryClient.invalidateQueries({ queryKey: ["access_change_log"] });
+      setCopied(false);
+      setCredential(result);
+      if (result.auditFailed) toast.error("Password changed, but the audit entry could not be recorded. Contact an administrator.");
+      else toast.success("Password reset");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not reset password.");
+    } finally {
+      setAccountBusy(false);
+    }
+  }
 
   const map = byId(employees.data);
 
@@ -121,6 +166,13 @@ function EmployeesPage() {
               Edit
             </Button>
           ) : null}
+          {canWrite && r.email ? <ConfirmAction
+            trigger={<Button size="sm" variant="outline" disabled={accountBusy} title="Reset password"><KeyRound className="size-4" /><span className="sr-only">Reset password for {r.full_name}</span></Button>}
+            title={`Reset ${r.full_name}'s password?`}
+            description="The old password will stop working. A new password will be shown once for you to copy and share securely."
+            confirmLabel="Reset password"
+            onConfirm={() => void resetFor(r)}
+          /> : null}
         </div>
       ),
     },
@@ -161,11 +213,32 @@ function EmployeesPage() {
         title={editing ? `Edit ${editing.full_name}` : "Add employee"}
         fields={fields}
         initial={editing ?? { status: "active" }}
-        saving={save.isPending}
-        onSubmit={(values) =>
-          save.mutate({ id: editing?.id, values }, { onSuccess: () => setOpen(false) })
-        }
+        saving={save.isPending || accountBusy}
+        onSubmit={(values) => {
+          if (editing) save.mutate({ id: editing.id, values }, { onSuccess: () => setOpen(false) });
+          else void createEmployee(values);
+        }}
       />
+      <Dialog open={credential !== null} onOpenChange={(next) => { if (!next) { setCredential(null); setCopied(false); } }}>
+        <DialogContent className="sm:max-w-md" onEscapeKeyDown={(event) => { if (accountBusy) event.preventDefault(); }}>
+          <DialogHeader>
+            <DialogTitle>Employee password</DialogTitle>
+            <DialogDescription>This password is shown only once. Copy it now and share it securely with {credential?.fullName}.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">{credential?.email}</p>
+            <code className="block select-all break-all rounded-md border bg-muted p-3 font-mono text-base" data-testid="one-time-password">{credential?.password}</code>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={async () => {
+              if (!credential) return;
+              try { await navigator.clipboard.writeText(credential.password); setCopied(true); }
+              catch { toast.error("Copy failed. Select and copy the password manually."); }
+            }}>{copied ? <Check className="mr-2 size-4" /> : <Copy className="mr-2 size-4" />}{copied ? "Copied" : "Copy password"}</Button>
+            <Button onClick={() => { setCredential(null); setCopied(false); }}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }
