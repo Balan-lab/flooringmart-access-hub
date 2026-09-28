@@ -15,6 +15,7 @@ import { RecordDialog, type Field } from "@/components/record-dialog";
 import { formatDate } from "@/lib/format";
 import { useCurrentUser } from "@/lib/auth";
 import { byId, useAccessRecords, useEmployees, useSave, type Employee } from "@/lib/data";
+import type { Database } from "@/integrations/supabase/types";
 import { createEmployeeAccount, resetEmployeePassword } from "@/lib/employee-accounts.functions";
 
 export const Route = createFileRoute("/_authenticated/employees")({
@@ -55,7 +56,7 @@ function EmployeesPage() {
   async function createEmployee(values: Record<string, unknown>) {
     setAccountBusy(true);
     try {
-      const result = await createAccount({ data: values as Parameters<typeof createAccount>[0]["data"] });
+      const result = await createAccount({ data: values as Database["public"]["Tables"]["employees"]["Insert"] & { email: string; status: "active" | "on_leave" | "former" } });
       await queryClient.invalidateQueries({ queryKey: ["employees"] });
       setOpen(false);
       setCopied(false);
@@ -90,7 +91,7 @@ function EmployeesPage() {
   const fields: Field[] = [
     { name: "employee_code", label: "Employee code", type: "text", required: true },
     { name: "full_name", label: "Full name", type: "text", required: true },
-    { name: "email", label: "Work email", type: "email" },
+    { name: "email", label: "Work email", type: "email", required: !editing },
     { name: "department", label: "Department", type: "text" },
     { name: "job_title", label: "Job title", type: "text" },
     {

@@ -74,7 +74,15 @@ export const createEmployeeAccount = createServerFn({ method: "POST" })
     if (authError || !created.user) throw new Error(authError?.message ?? "Could not create login account.");
 
     const { error: employeeError } = await context.supabase.from("employees").insert({
-      ...data,
+      employee_code: data.employee_code,
+      full_name: data.full_name,
+      department: data.department ?? null,
+      job_title: data.job_title ?? null,
+      manager_id: data.manager_id ?? null,
+      start_date: data.start_date ?? null,
+      end_date: data.end_date ?? null,
+      status: data.status,
+      notes: data.notes ?? null,
       email,
       auth_user_id: created.user.id,
       created_by: context.userId,
@@ -131,7 +139,7 @@ export const resetEmployeePassword = createServerFn({ method: "POST" })
     const { error: resetError } = await supabaseAdmin.auth.admin.updateUserById(userId, { password });
     if (resetError) throw new Error("Could not reset the employee password.");
 
-    const { error: auditError } = await supabaseAdmin.from("access_change_log").insert({
+    const { error: auditError } = await context.supabase.from("access_change_log").insert({
       employee_id: employee.id,
       action: "PASSWORD_RESET",
       completed_by: context.claims.email ?? context.userId,

@@ -43,7 +43,7 @@ type Props = {
   onSubmit: (values: Record<string, unknown>) => void;
 
   // Optional draft persistence
-  draftKey?: string;
+  draftKey?: string | undefined;
 };
 
 export function RecordDialog({
@@ -63,7 +63,7 @@ export function RecordDialog({
     if (!open) return;
 
     // Restore an existing draft when this dialog supports draft persistence.
-    if (draftKey && !initial?.id) {
+    if (draftKey && !initial?.["id"]) {
       try {
         const saved = sessionStorage.getItem(draftKey);
 
@@ -99,14 +99,14 @@ export function RecordDialog({
 
   // Persist the current draft whenever the user changes a field.
   useEffect(() => {
-    if (!open || !draftKey || initial?.id) return;
+    if (!open || !draftKey || initial?.["id"]) return;
 
     try {
       sessionStorage.setItem(draftKey, JSON.stringify(values));
     } catch {
       // Ignore storage errors.
     }
-  }, [values, open, draftKey, initial?.id]);
+  }, [values, open, draftKey, initial?.["id"]]);
 
   const set = (name: string, v: unknown) => {
     setValues((p) => ({ ...p, [name]: v }));
