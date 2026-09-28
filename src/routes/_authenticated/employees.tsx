@@ -57,10 +57,10 @@ function EmployeesPage() {
     setAccountBusy(true);
     try {
       const result = await createAccount({ data: values as Database["public"]["Tables"]["employees"]["Insert"] & { email: string; status: "active" | "on_leave" | "former" } });
-      await queryClient.invalidateQueries({ queryKey: ["employees"] });
       setOpen(false);
       setCopied(false);
       setCredential(result);
+      void queryClient.invalidateQueries({ queryKey: ["employees"] });
       toast.success("Employee login created");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not create employee login.");
@@ -73,10 +73,10 @@ function EmployeesPage() {
     setAccountBusy(true);
     try {
       const result = await resetPassword({ data: { employeeId: employee.id } });
-      await queryClient.invalidateQueries({ queryKey: ["employees"] });
-      await queryClient.invalidateQueries({ queryKey: ["access_change_log"] });
       setCopied(false);
       setCredential(result);
+      void queryClient.invalidateQueries({ queryKey: ["employees"] });
+      void queryClient.invalidateQueries({ queryKey: ["access_change_log"] });
       if (result.auditFailed) toast.error("Password changed, but the audit entry could not be recorded. Contact an administrator.");
       else toast.success("Password reset");
     } catch (error) {
@@ -211,7 +211,8 @@ function EmployeesPage() {
       <RecordDialog
         open={open}
         onOpenChange={setOpen}
-        title={editing ? `Edit ${editing.full_name}` : "Add employee"}
+        title={editing ? `Edit ${editing.full_name}` : "Add employee and login"}
+        description={editing ? undefined : "An account password will be generated and shown once after creation."}
         fields={fields}
         initial={editing ?? { status: "active" }}
         saving={save.isPending || accountBusy}
